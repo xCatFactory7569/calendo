@@ -1,0 +1,83 @@
+name: Build Intel (macOS 13+)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build for Intel Macs
+    runs-on: macos-14
+    timeout-minutes: 60
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "13.0"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install Rust with the Intel target
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup target add x86_64-apple-darwin
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the app for Intel
+        run: >
+          pnpm tauri build
+          --target x86_64-apple-darwin
+          --bundles app
+          --config src-tauri/tauri.intel.conf.json
+
+      - name: Check the result is Intel and macOS 13 compatible
+        run: |
+          APP="src-tauri/target/x86_64-apple-darwin/release/bundle/macos/Calendo.app"
+          BIN="$APP/Contents/MacOS/$(ls "$APP/Contents/MacOS" | head -1)"
+          echo "--- Architecture:"
+          lipo -info "$BIN"
+          echo "--- Minimum macOS version:"
+          vtool -show-build "$BIN" | grep -E "minos|platform" || true
+          echo "--- Signature:"
+          codesign -dv "$APP" 2>&1 || true
+
+      - name: Package (zip and dmg)
+        run: |
+          APP="src-tauri/target/x86_64-apple-darwin/release/bundle/macos/Calendo.app"
+          VERSION=$(node -p "require('./package.json').version")
+          mkdir -p out dmgroot
+          ditto -c -k --keepParent "$APP" "out/Calendo_${VERSION}_x86_64.zip"
+          cp -R "$APP" dmgroot/
+          ln -s /Applications dmgroot/Applications
+          hdiutil create -volname "Calendo" -srcfolder dmgroot -ov -format UDZO \
+            "out/Calendo_${VERSION}_x86_64.dmg"
+          ls -lh out
+
+      - name: Keep a copy as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Calendo-Intel
+          path: out/*
+
+      - name: Publish a GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v${VERSION}-intel"
+          gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$TAG" out/* \
+            --repo "${{ github.repository }}" \
+            --title "Calendo ${VERSION} (Intel, macOS 13+)" \
+            --notes "Unofficial Intel build. Not notarized: right-click the app and choose Open the first time."
