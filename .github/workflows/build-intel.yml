@@ -9,7 +9,7 @@ permissions:
 jobs:
   build:
     name: Build for Intel Macs
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 60
     env:
       MACOSX_DEPLOYMENT_TARGET: "13.0"
