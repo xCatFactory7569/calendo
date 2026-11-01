@@ -180,6 +180,18 @@
                 role="radiogroup"
                 aria-labelledby="menubar-heading"
               ></div>
+              <div class="row" id="show-calendar-item-row">
+                <div class="copy">
+                  <label for="show-calendar-item">Show calendar in menu bar</label>
+                  <p>Turn off to keep only the events item. Needs “Show upcoming in menu bar” on the Events tab; ⌃⌘K still opens the month.</p>
+                </div>
+                <input
+                  id="show-calendar-item"
+                  name="showCalendarInMenuBar"
+                  type="checkbox"
+                  switch
+                />
+              </div>
               <div class="row">
                 <label for="show-weekday">Show day of week</label>
                 <input id="show-weekday" name="showWeekday" type="checkbox" switch />
@@ -266,6 +278,18 @@
                 </div>
                 <select id="upcoming-horizon" name="upcomingHorizonDays"></select>
               </div>
+              <div class="row" id="show-event-actions-row">
+                <div class="copy">
+                  <label for="show-event-actions">Join and Dismiss buttons</label>
+                  <p>Off, the events panel shows event details only.</p>
+                </div>
+                <input
+                  id="show-event-actions"
+                  name="showEventActions"
+                  type="checkbox"
+                  switch
+                />
+              </div>
               <div class="row" id="include-all-day-row">
                 <div class="copy">
                   <label for="include-all-day">All-day events</label>
@@ -313,6 +337,18 @@
                   <p>When the events item joins the menu bar.</p>
                 </div>
                 <select id="upcoming-icon-lead" name="upcomingIconLeadMinutes"></select>
+              </div>
+              <div class="row" id="show-event-countdown-row">
+                <div class="copy">
+                  <label for="show-event-countdown">Countdown</label>
+                  <p>Time left until the next event. Off shows a plain event icon.</p>
+                </div>
+                <input
+                  id="show-event-countdown"
+                  name="showEventCountdownInMenuBar"
+                  type="checkbox"
+                  switch
+                />
               </div>
               <div class="row" id="show-event-time-row">
                 <div class="copy">

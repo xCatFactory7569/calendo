@@ -12,7 +12,13 @@ import {
   monthOutlinePath,
   occupancyFromWeeks,
 } from "../shared/month-outline";
-import { menuBarLabel, highlightedColumnRuns, trayLabelKey, type AppSettings } from "../shared/settings";
+import {
+  calendarItemVisible,
+  menuBarLabel,
+  highlightedColumnRuns,
+  trayLabelKey,
+  type AppSettings,
+} from "../shared/settings";
 import {
   eventStatus,
   eventTimeRange,
@@ -22,7 +28,7 @@ import {
   type UpcomingEvent,
 } from "../shared/events";
 import { lucideIcon } from "./icons";
-import { eventGlyphPng, framedGlyphPng } from "./tray-frame";
+import { eventGlyphPng, eventIconPng, framedGlyphPng } from "./tray-frame";
 import { markPopoverMaterial } from "./popover-size";
 import { bandBox } from "./column-bands";
 import { installTauriBridge, type DesktopApi } from "./host";
@@ -278,14 +284,26 @@ function startCalendar(api: DesktopApi): void {
             showTime: settings.showEventTimeInMenuBar,
           })
         : null;
-    const eventSignature = `${glyphText ?? ""}|${previewText ?? ""}|${Boolean(glyphText)}`;
+    // With the month item hidden, the events item stays on even when nothing
+    // is coming up, so there is always an item to right-click.
+    const monthHidden = !calendarItemVisible(settings);
+    const eventActive = Boolean(glyphText);
+    const countdown = settings.showEventCountdownInMenuBar;
+    const eventVisible = eventActive || monthHidden;
+    const eventSignature = [
+      countdown ? glyphText ?? "" : "",
+      previewText ?? "",
+      eventActive,
+      countdown,
+      eventVisible,
+    ].join("|");
     if (eventSignature !== lastEventTrayLabel) {
       lastEventTrayLabel = eventSignature;
-      void api.setEventTrayLabel(
-        previewText,
-        glyphText ? eventGlyphPng(glyphText) : null,
-        Boolean(glyphText),
-      );
+      // The countdown draws the time left; without it, or while nothing is
+      // coming up, the item is a plain event icon.
+      const image =
+        countdown && glyphText ? eventGlyphPng(glyphText) : eventVisible ? eventIconPng() : null;
+      void api.setEventTrayLabel(previewText, image, eventVisible);
     }
     if (signature === lastTrayLabel) return;
     lastTrayLabel = signature;

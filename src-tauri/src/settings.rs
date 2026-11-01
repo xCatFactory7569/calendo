@@ -57,6 +57,9 @@ pub struct AppSettings {
     pub include_events_without_location: bool,
     pub show_event_title_in_menu_bar: bool,
     pub show_event_time_in_menu_bar: bool,
+    pub show_calendar_in_menu_bar: bool,
+    pub show_event_countdown_in_menu_bar: bool,
+    pub show_event_actions: bool,
     pub toggle_calendar_shortcut: String,
     pub join_meeting_shortcut: String,
     pub hidden_calendar_ids: Vec<String>,
@@ -86,6 +89,9 @@ impl Default for AppSettings {
             include_events_without_location: true,
             show_event_title_in_menu_bar: false,
             show_event_time_in_menu_bar: false,
+            show_calendar_in_menu_bar: true,
+            show_event_countdown_in_menu_bar: true,
+            show_event_actions: true,
             toggle_calendar_shortcut: "Control+Command+K".into(),
             join_meeting_shortcut: String::new(),
             hidden_calendar_ids: Vec::new(),
@@ -96,6 +102,12 @@ impl Default for AppSettings {
 }
 
 impl AppSettings {
+    /// The month item may only leave the menu bar while the events item is on,
+    /// so there is always something left to right-click for Settings and Quit.
+    pub fn calendar_item_visible(&self) -> bool {
+        self.show_calendar_in_menu_bar || !self.show_upcoming_event
+    }
+
     fn migrate_legacy_format(&mut self) {
         if let Some((_, icon, weekday, month)) = LEGACY_FORMATS
             .iter()
@@ -219,6 +231,17 @@ impl SettingsStore {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn month_item_only_hides_while_events_item_is_on() {
+        let mut settings = AppSettings::default();
+        assert!(settings.calendar_item_visible());
+        settings.show_calendar_in_menu_bar = false;
+        // Events item off: nothing else would be left to right-click.
+        assert!(settings.calendar_item_visible());
+        settings.show_upcoming_event = true;
+        assert!(!settings.calendar_item_visible());
+    }
+
     use super::*;
 
     #[test]

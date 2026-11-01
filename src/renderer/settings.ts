@@ -122,6 +122,9 @@ function startSettings(api: DesktopApi): void {
   const includeWithoutLocation = requireElement<HTMLInputElement>(
     "include-without-location",
   );
+  const showCalendarItem = requireElement<HTMLInputElement>("show-calendar-item");
+  const showEventCountdown = requireElement<HTMLInputElement>("show-event-countdown");
+  const showEventActions = requireElement<HTMLInputElement>("show-event-actions");
   const showEventTitle = requireElement<HTMLInputElement>("show-event-title");
   const showEventTime = requireElement<HTMLInputElement>("show-event-time");
   const toggleCalendarShortcut = requireElement<HTMLButtonElement>(
@@ -226,9 +229,17 @@ function startSettings(api: DesktopApi): void {
     includeWithoutParticipants,
     includeWithoutLocation,
     upcomingIconLead,
+    showEventCountdown,
+    showEventActions,
     showEventTime,
     showEventTitle,
   ];
+
+  /** The month item can only go while the events item is on. */
+  const paintCalendarItem = (upcomingOn: boolean): void => {
+    showCalendarItem.disabled = !upcomingOn;
+    showCalendarItem.closest(".row")?.classList.toggle("is-off", !upcomingOn);
+  };
 
   const paintUpcomingOptions = (enabled: boolean): void => {
     for (const input of upcomingControls()) {
@@ -430,7 +441,11 @@ function startSettings(api: DesktopApi): void {
     includeWithoutLocation.checked = settings.includeEventsWithoutLocation;
     showEventTitle.checked = settings.showEventTitleInMenuBar;
     showEventTime.checked = settings.showEventTimeInMenuBar;
+    showCalendarItem.checked = settings.showCalendarInMenuBar;
+    showEventCountdown.checked = settings.showEventCountdownInMenuBar;
+    showEventActions.checked = settings.showEventActions;
     paintUpcomingOptions(settings.showUpcomingEvent);
+    paintCalendarItem(settings.showUpcomingEvent);
     paintShortcut(toggleCalendarShortcut, settings.toggleCalendarShortcut);
     paintShortcut(joinMeetingShortcut, settings.joinMeetingShortcut);
     hiddenCalendarIds = settings.hiddenCalendarIds;
@@ -455,6 +470,9 @@ function startSettings(api: DesktopApi): void {
     includeEventsWithoutLocation: includeWithoutLocation.checked,
     showEventTitleInMenuBar: showEventTitle.checked,
     showEventTimeInMenuBar: showEventTime.checked,
+    showCalendarInMenuBar: showCalendarItem.checked,
+    showEventCountdownInMenuBar: showEventCountdown.checked,
+    showEventActions: showEventActions.checked,
     theme: theme.value as Theme,
   });
 
@@ -480,6 +498,7 @@ function startSettings(api: DesktopApi): void {
     const patch = patchFromForm();
     applyTheme(patch.theme ?? "system");
     paintUpcomingOptions(patch.showUpcomingEvent ?? false);
+    paintCalendarItem(patch.showUpcomingEvent ?? false);
     void api.updateSettings(patch);
   });
 

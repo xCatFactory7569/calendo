@@ -69,6 +69,9 @@ function eventRow(event: UpcomingEvent): HTMLElement {
   return row;
 }
 
+/** Join and Dismiss rows. Off, the panel shows event details only. */
+let showActions = DEFAULT_SETTINGS.showEventActions;
+
 function detailRow(icon: Element | null, text: string, onClick?: () => void): HTMLElement {
   const row = document.createElement(onClick ? "button" : "div") as HTMLElement;
   row.className = onClick ? "detail-row interactive" : "detail-row muted";
@@ -87,7 +90,7 @@ function detailRow(icon: Element | null, text: string, onClick?: () => void): HT
 function eventDetails(event: UpcomingEvent, includeLocation = false): HTMLElement | null {
   const details = document.createElement("div");
   details.className = "detail";
-  if (event.joinUrl) {
+  if (event.joinUrl && showActions) {
     const url = event.joinUrl;
     const { brand, label } = meetingBrand(url);
     details.append(detailRow(meetingIcon(brand, 13), label, () => {
@@ -119,7 +122,7 @@ function featuredEvent(
   nodes.push(row);
   const details = eventDetails(event, true);
   if (details) nodes.push(details);
-  if (onDismiss) {
+  if (onDismiss && showActions) {
     nodes.push(detailRow(lucideIcon(EyeOff, 15), "Dismiss this event", onDismiss));
   }
   return nodes;
@@ -225,12 +228,17 @@ function applyEventSettings(settings: AppSettings): void {
   const leadChanged = settings.upcomingIconLeadMinutes !== iconLeadMinutes;
   const hiddenChanged = hiddenKey !== hiddenCalendarKey;
   const filtersChanged = filterKey(next) !== filterKey(filters);
+  const actions = settings.showEventActions ?? DEFAULT_SETTINGS.showEventActions;
+  const actionsChanged = actions !== showActions;
+  showActions = actions;
   horizonDays = settings.upcomingHorizonDays;
   iconLeadMinutes =
     settings.upcomingIconLeadMinutes ?? DEFAULT_SETTINGS.upcomingIconLeadMinutes;
   filters = next;
   hiddenCalendarKey = hiddenKey;
-  if (daysChanged || leadChanged || hiddenChanged || filtersChanged) void load();
+  if (daysChanged || leadChanged || hiddenChanged || filtersChanged || actionsChanged) {
+    void load();
+  }
 }
 
 void api.getSettings().then(applyEventSettings);

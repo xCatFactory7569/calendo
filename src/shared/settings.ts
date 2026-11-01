@@ -69,6 +69,12 @@ export type AppSettings = {
   showEventTitleInMenuBar: boolean;
   /** Start time, or the time left, beside the countdown glyph. */
   showEventTimeInMenuBar: boolean;
+  /** The month calendar item in the menu bar. Needs the events item to stay on. */
+  showCalendarInMenuBar: boolean;
+  /** Time left beside the events item. Off draws a plain event icon instead. */
+  showEventCountdownInMenuBar: boolean;
+  /** Join meeting and Dismiss rows in the events panel. */
+  showEventActions: boolean;
   /** System-wide chord that toggles the month popover. Empty is unset. */
   toggleCalendarShortcut: string;
   /** System-wide chord that opens the previewed meeting link. Empty is unset. */
@@ -170,6 +176,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   includeEventsWithoutLocation: true,
   showEventTitleInMenuBar: false,
   showEventTimeInMenuBar: false,
+  showCalendarInMenuBar: true,
+  showEventCountdownInMenuBar: true,
+  showEventActions: true,
   toggleCalendarShortcut: "Control+Command+K",
   joinMeetingShortcut: "",
   hiddenCalendarIds: [],
@@ -268,6 +277,16 @@ export function highlightedColumnRuns(
     index = end;
   }
   return runs;
+}
+
+/**
+ * The month item may only leave the menu bar while the events item is on.
+ * Otherwise nothing would be left to right-click for Settings and Quit.
+ */
+export function calendarItemVisible(
+  settings: Pick<AppSettings, "showCalendarInMenuBar" | "showUpcomingEvent">,
+): boolean {
+  return settings.showCalendarInMenuBar || !settings.showUpcomingEvent;
 }
 
 export function datedMenuBarIcon(style: MenuBarIconStyle): boolean {
@@ -434,6 +453,18 @@ export function normalizeSettings(raw: unknown): AppSettings {
     showEventTimeInMenuBar: asBoolean(
       input.showEventTimeInMenuBar,
       DEFAULT_SETTINGS.showEventTimeInMenuBar,
+    ),
+    showCalendarInMenuBar: asBoolean(
+      input.showCalendarInMenuBar,
+      DEFAULT_SETTINGS.showCalendarInMenuBar,
+    ),
+    showEventCountdownInMenuBar: asBoolean(
+      input.showEventCountdownInMenuBar,
+      DEFAULT_SETTINGS.showEventCountdownInMenuBar,
+    ),
+    showEventActions: asBoolean(
+      input.showEventActions,
+      DEFAULT_SETTINGS.showEventActions,
     ),
     toggleCalendarShortcut: normalizeShortcut(
       input.toggleCalendarShortcut,

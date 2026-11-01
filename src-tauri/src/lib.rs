@@ -840,7 +840,16 @@ fn toggle_events(app: &AppHandle, tray_rect: tauri::Rect) {
 
 /// The status item's frame, which a shortcut has no click to carry.
 fn tray_anchor(app: &AppHandle) -> Option<tauri::Rect> {
-    app.tray_by_id(TRAY_ID)
+    // With the month item hidden, the shortcut opens the month under the
+    // events item instead.
+    let calendar_shown = app
+        .state::<AppState>()
+        .settings
+        .lock()
+        .map(|store| store.value().calendar_item_visible())
+        .unwrap_or(true);
+    let id = if calendar_shown { TRAY_ID } else { EVENT_TRAY_ID };
+    app.tray_by_id(id)
         .and_then(|tray| tray.rect().ok().flatten())
 }
 
@@ -1047,6 +1056,13 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     #[cfg(target_os = "macos")]
     remember_status_item_menu(&event_tray, &status_menu);
     let _ = event_tray.set_visible(false);
+    let initial = app
+        .state::<AppState>()
+        .settings
+        .lock()
+        .map(|store| store.value())
+        .unwrap_or_default();
+    let _ = calendar.set_visible(initial.calendar_item_visible());
     Ok(())
 }
 
@@ -1249,6 +1265,15 @@ fn update_settings(
                 let _ = window.set_size(Size::Logical(LogicalSize::new(width, height)));
             }
         }
+    }
+    if saved.calendar_item_visible() != previous.calendar_item_visible() {
+        let visible = saved.calendar_item_visible();
+        let handle = app.clone();
+        let _ = app.run_on_main_thread(move || {
+            if let Some(tray) = handle.tray_by_id(TRAY_ID) {
+                let _ = tray.set_visible(visible);
+            }
+        });
     }
     if saved.theme != previous.theme {
         apply_app_theme(&app, &saved.theme);

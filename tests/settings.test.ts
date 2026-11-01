@@ -3,6 +3,7 @@ import {
   DEFAULT_SETTINGS,
   MENU_BAR_ICONS,
   calendarIsVisible,
+  calendarItemVisible,
   calendarsOfKind,
   groupCalendarsBySource,
   supportsDateParts,
@@ -333,5 +334,30 @@ describe("highlighted columns", () => {
     expect(highlightedColumnRuns(0, [0, 1, 2, 3, 4, 5, 6])).toEqual([
       { start: 0, count: 7 },
     ]);
+  });
+});
+
+describe("menu bar items and panel buttons", () => {
+  it("defaults keep the original behaviour", () => {
+    expect(DEFAULT_SETTINGS.showCalendarInMenuBar).toBe(true);
+    expect(DEFAULT_SETTINGS.showEventCountdownInMenuBar).toBe(true);
+    expect(DEFAULT_SETTINGS.showEventActions).toBe(true);
+  });
+
+  it("keeps the month item unless the events item can stand in", () => {
+    expect(calendarItemVisible({ showCalendarInMenuBar: false, showUpcomingEvent: false })).toBe(true);
+    expect(calendarItemVisible({ showCalendarInMenuBar: false, showUpcomingEvent: true })).toBe(false);
+    expect(calendarItemVisible({ showCalendarInMenuBar: true, showUpcomingEvent: true })).toBe(true);
+  });
+
+  it("reads the new switches from a saved file", () => {
+    const settings = normalizeSettings({
+      showCalendarInMenuBar: false,
+      showEventCountdownInMenuBar: false,
+      showEventActions: false,
+    });
+    expect(settings.showCalendarInMenuBar).toBe(false);
+    expect(settings.showEventCountdownInMenuBar).toBe(false);
+    expect(settings.showEventActions).toBe(false);
   });
 });

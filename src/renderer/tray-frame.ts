@@ -131,3 +131,43 @@ export function eventGlyphPng(text: string): number[] {
   const binary = atob(encoded);
   return Array.from(binary, (character) => character.charCodeAt(0));
 }
+
+/**
+ * A plain event icon for the events item: a calendar page with one block
+ * marked. Template image, so it tints with the menu bar like the others.
+ */
+export function eventIconPng(): number[] {
+  const canvas = document.createElement("canvas");
+  canvas.width = EVENT_BOX;
+  canvas.height = EVENT_BOX;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return [];
+  ctx.strokeStyle = "#000";
+  ctx.fillStyle = "#000";
+  ctx.lineWidth = 3;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  // Page.
+  ctx.beginPath();
+  ctx.roundRect(5, 7, 26, 25, 5);
+  ctx.stroke();
+  // Header rule.
+  ctx.beginPath();
+  ctx.moveTo(5, 15);
+  ctx.lineTo(31, 15);
+  ctx.stroke();
+  // Binder rings.
+  ctx.beginPath();
+  ctx.moveTo(12, 3.5);
+  ctx.lineTo(12, 10);
+  ctx.moveTo(24, 3.5);
+  ctx.lineTo(24, 10);
+  ctx.stroke();
+  // The marked day.
+  ctx.beginPath();
+  ctx.roundRect(11, 20, 8, 7, 2);
+  ctx.fill();
+  const encoded = canvas.toDataURL("image/png").split(",")[1] ?? "";
+  const binary = atob(encoded);
+  return Array.from(binary, (character) => character.charCodeAt(0));
+}
